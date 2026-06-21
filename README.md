@@ -63,6 +63,23 @@ With the default configuration (`N = 3`, `EMBED_DIM = 128`), the input layer has
 | Learning rate            | 0.01      |
 | Training iterations    | 300,000   |
 
+## Project Structure
+
+```
+Next-Word-Predictor/
+│
+├── README.md                     # Project documentation
+├── next_word_predictor.ipynb     # Main Colab notebook (data prep, training, UI)
+│
+└── Google Drive/ (Next_word_predictor/)
+    ├── sentences.txt              # Training text corpus
+    ├── embeddings.npy             # Saved word embedding table
+    ├── model_parameters.pkl       # Saved network weights and biases
+    └── vocab.pkl                  # Saved word-to-ID vocabulary mapping
+```
+
+> Note: The dataset and trained model files are stored on Google Drive (not in the GitHub repo) and are accessed by the notebook via the mounted Drive paths.
+
 ## Saved Artifacts
 
 The following files are saved to / loaded from Google Drive so the model does not need to be retrained every session:
