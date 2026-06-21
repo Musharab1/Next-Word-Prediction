@@ -14,7 +14,10 @@ Train a multi-layer neural network to approximate the next-word probability dist
 
 ## Project Workflow
 
-1. **Data Loading** – Sentences are read from a text file (`sentences.txt`) stored on Google Drive.
+1. **Data Loading** – Sentences are read from a text file (`sentences.txt`) stored on Google Drive at:
+   ```
+   /content/drive/MyDrive/Next_word_predictor/sentences.txt
+   ```
 2. **Tokenization & Preprocessing** – Text is lowercased, stripped of non-alphabetic characters, and split into word tokens.
 3. **Vocabulary Building** – A vocabulary is constructed from all tokens that occur **at least 2 times**. Words below this frequency (and unseen words at inference time) are mapped to a special `<UNK>` token.
 4. **Word Embeddings** – Each vocabulary word is assigned a trainable embedding vector (initialized randomly with Xavier-style scaling).
@@ -64,9 +67,12 @@ With the default configuration (`N = 3`, `EMBED_DIM = 128`), the input layer has
 
 The following files are saved to / loaded from Google Drive so the model does not need to be retrained every session:
 
-- `embeddings.npy` – Trained word embedding table
-- `model_parameters.pkl` – Trained network weights and biases
-- `vocab.pkl` – Word-to-ID vocabulary mapping
+| File | Description | Path |
+|------|-------------|------|
+| `sentences.txt` | Training text corpus | `/content/drive/MyDrive/Next_word_predictor/sentences.txt` |
+| `embeddings.npy` | Trained word embedding table | `/content/drive/MyDrive/Next_word_predictor/embeddings.npy` |
+| `model_parameters.pkl` | Trained network weights and biases | `/content/drive/MyDrive/Next_word_predictor/model_parameters.pkl` |
+| `vocab.pkl` | Word-to-ID vocabulary mapping | `/content/drive/MyDrive/Next_word_predictor/vocab.pkl` |
 
 ## Interactive Web Interface (Gradio)
 
@@ -95,3 +101,15 @@ The notebook includes a Gradio-based UI with the following features:
    - If saved model files (`embeddings.npy`, `model_parameters.pkl`, `vocab.pkl`) are found on Drive, they are loaded directly.
    - Otherwise, the model is trained from scratch and the resulting files are saved to Drive.
 5. The final cells launch the Gradio app, producing a shareable link to interact with the next-word predictor.
+
+## References
+
+[1] Bengio, Y., Ducharme, R., Vincent, P., & Jauvin, C. (2003). A Neural Probabilistic Language Model. *Journal of Machine Learning Research*, 3, 1137–1155.
+
+[2] NumPy Documentation. https://numpy.org/doc/
+
+[3] Gradio Documentation. https://www.gradio.app/docs/
+
+[4] Google Colab. https://colab.research.google.com/
+
+[5] Glorot, X., & Bengio, Y. (2010). Understanding the difficulty of training deep feedforward neural networks. *AISTATS*.
