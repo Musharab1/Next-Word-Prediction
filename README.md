@@ -1,167 +1,97 @@
-# 🔤 Next Word Predictor
+# Next-Word Predictor
 
-A deep learning-based next-word prediction system built **entirely from scratch using pure NumPy** — no TensorFlow, no PyTorch. Trained on a custom text corpus and served through an interactive Gradio UI with real-time suggestions and online learning.
+A multi-layer neural network, built from scratch using NumPy, that predicts the next word in a sentence based on the preceding `N` words. The model is trained on a custom text corpus and served through an interactive Gradio web interface that also supports online (live) learning from user input.
 
----
+**Submitted to:** Dr. Umar Rashid
 
-## ✨ Features
+**Submitted by:**
+- Musharab Sabeen (2022-EE-251)
+- Ahsan bin Asif (2022-EE-274)
 
-- **Pure NumPy neural network** — forward pass, backpropagation, and SGD all hand-coded
-- **3-layer architecture** — Embed → Dense(256, Leaky ReLU) → Dense(128, Leaky ReLU) → Softmax
-- **N-gram sliding window** — uses the last N=3 words as context to predict the next word
-- **Xavier/He weight initialization** — for stable training from the start
-- **Top-K inference** — returns the top 5 most probable next words with confidence scores
-- **Online learning** — model updates in real time from new user-typed sentences
-- **Persistent storage** — embeddings, weights, and vocab saved to Google Drive
-- **Gradio UI** — live word suggestion buttons that update on every keystroke
+## Objective
 
----
+Train a multi-layer neural network to approximate the next-word probability distribution for a sequence of text, given the preceding `N` words as context.
 
-## 🏗️ Architecture
+## Project Workflow
 
-```
-Input (context window, N=3 words)
-        │
-        ▼
-Embedding Lookup  →  concat  →  shape: (384,)   [3 × 128-dim embeddings]
-        │
-        ▼
-Dense(256)  +  Leaky ReLU
-        │
-        ▼
-Dense(128)  +  Leaky ReLU
-        │
-        ▼
-Dense(vocab_size)  +  Softmax
-        │
-        ▼
-Top-K Predictions
-```
+1. **Data Loading** – Sentences are read from a text file (`sentences.txt`) stored on Google Drive.
+2. **Tokenization & Preprocessing** – Text is lowercased, stripped of non-alphabetic characters, and split into word tokens.
+3. **Vocabulary Building** – A vocabulary is constructed from all tokens that occur **at least 2 times**. Words below this frequency (and unseen words at inference time) are mapped to a special `<UNK>` token.
+4. **Word Embeddings** – Each vocabulary word is assigned a trainable embedding vector (initialized randomly with Xavier-style scaling).
+5. **Training Example Generation** – For every position in the token stream, the preceding `N` words form the context, and the following word is the target label.
+6. **Model Training** – A fully custom feed-forward neural network (implemented with raw NumPy, no deep learning frameworks) is trained using mini-batch gradient descent with backpropagation, which also updates the word embeddings.
+7. **Model Persistence** – Trained embeddings, network parameters, and the vocabulary are saved to Google Drive (and reloaded automatically on the next run if available, skipping retraining).
+8. **Interactive UI** – A Gradio app allows users to type text, view live next-word suggestions with confidence scores, click suggestions to auto-complete, and trigger online learning on the typed sentence.
 
----
-
-## 📁 Project Structure
+## Neural Network Architecture
 
 ```
-Next_word_predictor/
-├── sentences.txt           # Training corpus (one sentence per line, UTF-8)
-├── vocab.pkl               # Pickled word → ID dictionary
-├── embeddings.npy          # Trained embedding table (vocab_size × 128)
-├── model_parameters.pkl    # Trained weights W1,b1,W2,b2,W3,b3
-└── Deep_learning_project.ipynb  # Main Colab notebook
+Input:    Concatenation of N word embeddings  → shape (N * embed_dim,)
+Hidden 1: Dense(256) + Leaky ReLU
+Hidden 2: Dense(128) + Leaky ReLU
+Output:   Dense(vocab_size) + Softmax
+Loss:     Cross-Entropy
 ```
 
----
+With the default configuration (`N = 3`, `EMBED_DIM = 128`), the input layer has 384 units.
 
-## 🚀 Getting Started
+### Core Components (implemented from scratch)
 
-### 1. Open in Google Colab
+- Leaky ReLU activation and its derivative
+- Softmax activation
+- Parameter initialization (He/Xavier-style scaling)
+- Forward propagation through 2 hidden layers
+- Cross-entropy cost computation
+- Backward propagation (including gradients flowing back into the embedding table)
+- Parameter update step (gradient descent)
+- Embedding table update step
+- Mini-batch training loop (`nn_model`)
+- Top-k prediction function
 
-Upload or open `Deep_learning_project.ipynb` in [Google Colab](https://colab.research.google.com/).
+## Training Configuration
 
-### 2. Mount Google Drive
+| Hyperparameter        | Value     |
+|------------------------|-----------|
+| Context window (N)     | 3         |
+| Embedding dimension    | 128       |
+| Hidden layer 1 size    | 256       |
+| Hidden layer 2 size    | 128       |
+| Batch size              | 64        |
+| Learning rate            | 0.01      |
+| Training iterations    | 300,000   |
 
-```python
-from google.colab import drive
-drive.mount('/content/drive')
-```
+## Saved Artifacts
 
-### 3. Set file paths
+The following files are saved to / loaded from Google Drive so the model does not need to be retrained every session:
 
-Edit the config block at the top of the notebook to point to your Drive folder:
+- `embeddings.npy` – Trained word embedding table
+- `model_parameters.pkl` – Trained network weights and biases
+- `vocab.pkl` – Word-to-ID vocabulary mapping
 
-```python
-DATASET_FILE      = '/content/drive/MyDrive/Next_word_predictor/sentences.txt'
-EMBEDDINGS_FILE   = '/content/drive/MyDrive/Next_word_predictor/embeddings.npy'
-VOCAB_FILE        = '/content/drive/MyDrive/Next_word_predictor/vocab.pkl'
-PARAMETERS_FILE   = '/content/drive/MyDrive/Next_word_predictor/model_parameters.pkl'
-EMBED_DIM = 128
-N = 3  # context window size
-```
+## Interactive Web Interface (Gradio)
 
-### 4. Run all cells
+The notebook includes a Gradio-based UI with the following features:
 
-The notebook will:
-- **Load** saved model files from Drive if they exist
-- **Train** a new model (300,000 iterations) if no saved files are found
-- **Launch** the Gradio interface automatically
+- **Live suggestions** – As the user types, the top 5 next-word predictions (with confidence percentages) are displayed and updated on every keystroke.
+- **Click-to-complete** – Clicking a suggested word appends it to the text box and refreshes the suggestions.
+- **Online learning** – A "Learn from this sentence" button fine-tunes the model (and embeddings) on the currently typed sentence using a small number of additional gradient steps, then saves the updated model back to Google Drive.
+- **Custom styling** – The interface uses custom CSS for a cleaner, rounded-button look.
 
----
+## Tech Stack
 
-## 🧠 How It Works
+- Python
+- NumPy (for all neural network math — no TensorFlow/PyTorch)
+- Google Colab + Google Drive (for storage and execution)
+- Gradio (for the web interface)
+- `re` and `collections.Counter` (for tokenization and vocabulary building)
+- `pickle` (for saving/loading parameters and vocabulary)
 
-### Preprocessing
-- Text is lowercased and stripped of all non-alphabetic characters
-- Words appearing fewer than **3 times** are excluded from the vocabulary and replaced with `<UNK>`
+## How to Run
 
-### Training
-- Sliding N-gram windows create `(context, target)` pairs from the corpus
-- Mini-batches of size 64 are sampled randomly at each iteration
-- SGD with learning rate `0.01` updates weights and the embedding table simultaneously
-- Loss is printed every 5,000 iterations
-
-### Inference
-- The last N words of the input are looked up in the embedding table
-- Their vectors are concatenated and fed through the network
-- Softmax output is sorted; the top-K valid words (excluding `<UNK>`, empty strings, low-confidence predictions) are returned
-
-### Online Learning
-- When the user clicks **"Learn from this sentence"**, the model runs 20 gradient update steps on that sentence at `lr=0.005`
-- Updated parameters are immediately saved back to Google Drive
-
----
-
-## 🖥️ User Interface
-
-| Element | Description |
-|---|---|
-| **Text box** | Type your sentence here |
-| **5 suggestion buttons** | Click to append a predicted word (shows word + confidence %) |
-| **Learn button** | Trains the model on your current sentence |
-| **Status box** | Confirms what was learned |
-
----
-
-## ⚙️ Hyperparameters
-
-| Parameter | Value |
-|---|---|
-| Embedding dimension | 128 |
-| Context window (N) | 3 |
-| Hidden layer 1 | 256 neurons |
-| Hidden layer 2 | 128 neurons |
-| Activation | Leaky ReLU (α=0.01) |
-| Loss | Cross-entropy |
-| Optimizer | SGD |
-| Learning rate | 0.01 (training), 0.005 (online) |
-| Batch size | 64 |
-| Training iterations | 300,000 |
-| Min word frequency | 3 |
-
----
-
-## 📦 Dependencies
-
-```bash
-pip install gradio numpy
-```
-
-> All other code uses Python standard library (`re`, `collections`, `pickle`).
-
----
-
-## 📌 Notes
-
-- The model trains from scratch if no saved files are found on Drive — this takes several minutes on Colab CPU.
-- For best predictions, use a large and diverse `sentences.txt` corpus.
-- The Gradio share link expires after 1 week; re-run the last cell to get a fresh link.
-
----
-
-
-
-**2022-EE-251 & 2022-EE-274**  
-Department of Electrical Engineering  
-University of Engineering and Technology, Lahore  
-Course: Deep Learning — CEP Project  
-Supervisor: Dr. Umar Rashid
+1. Open the notebook in Google Colab.
+2. Mount Google Drive when prompted.
+3. Ensure `sentences.txt` exists at the configured path on Drive (used as the training corpus).
+4. Run all cells:
+   - If saved model files (`embeddings.npy`, `model_parameters.pkl`, `vocab.pkl`) are found on Drive, they are loaded directly.
+   - Otherwise, the model is trained from scratch and the resulting files are saved to Drive.
+5. The final cells launch the Gradio app, producing a shareable link to interact with the next-word predictor.
